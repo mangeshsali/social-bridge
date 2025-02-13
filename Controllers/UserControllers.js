@@ -29,7 +29,7 @@ const Signup = async (req, res) => {
 
     const UserData = new UserModel(User);
     await UserData.save();
-    res.status(201).send({ message: "Sucessfully Send" });
+    res.status(201).send({ message: "Sucessfully Created" });
   } catch (error) {
     console.log(error.message);
     res.status(500).send({ message: error.message });
