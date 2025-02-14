@@ -171,9 +171,55 @@ const ConnectionsAll = async (req, res) => {
       .status(400);
   }
 };
+
+const FeedSuggestion = async (req, res) => {
+  try {
+    const { _id: LogInID } = req.user;
+
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    limit = limit > 50 ? 50 : limit;
+
+    const skip = (page - 1) * limit;
+
+    const FindConnection = await ConnectionModel.find({
+      $or: [{ fromUserId: LogInID }, { toUserId: LogInID }],
+    });
+
+    const ConnectionFilter = FindConnection.reduce((acc, curr) => {
+      if (curr.fromUserId.toString() === LogInID.toString()) {
+        acc.push(curr.toUserId);
+      } else if (curr.toUserId.toString() === LogInID.toString()) {
+        acc.push(curr.fromUserId);
+      }
+      return acc;
+    }, []);
+
+    const FindUser = await UserModel.find({
+      _id: { $nin: [LogInID, ...ConnectionFilter] },
+    })
+      .skip(skip)
+      .limit(limit)
+      .select(["firstName", "lastName"]);
+
+    if (FindUser.length === 0) {
+      return res.send({ message: "No User Found" }).status(200);
+    }
+
+    res.send(FindUser);
+  } catch (error) {
+    res
+      .send({
+        error: error.message,
+      })
+      .status(400);
+  }
+};
+
 module.exports = {
   SendRequest,
   RequestReview,
   RequestAllReview,
   ConnectionsAll,
+  FeedSuggestion,
 };
