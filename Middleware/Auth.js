@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const UserModel = require("../Model/UserModel");
+require("dotenv").config();
 
 const Auth = async (req, res, next) => {
   try {
@@ -9,7 +10,7 @@ const Auth = async (req, res, next) => {
       return res.send({ message: "Invalid Token" });
     }
 
-    const DecodedToken = jwt.verify(token, "MangeshSali");
+    const DecodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
     const FindUser = await UserModel.findOne({ _id: DecodedToken });
 

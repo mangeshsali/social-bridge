@@ -1,10 +1,15 @@
 const UserModel = require("../Model/UserModel");
 const bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
+const ProfileCloudinary = require("../Utils/ProfileCloudinary");
+require("dotenv").config();
 
 const Signup = async (req, res) => {
   try {
     const { firstName, lastName, email, gender, age, password } = req.body;
+    const file = req.file;
+
+    const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png"];
 
     if (!firstName || !lastName || !email || !gender || !age || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -18,9 +23,26 @@ const Signup = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    if (file && file.size > 20 * 1024 * 1024) {
+      return res
+        .status(500)
+        .send({ message: "Image Should be less than 20 MB" });
+    }
+
+    if (file) {
+      if (!allowedMimeTypes.includes(file.mimetype)) {
+        return res
+          .status(400)
+          .json({ message: "Only JPEG, JPG, and PNG files are allowed" });
+      }
+    }
+
+    const profileUpload = await ProfileCloudinary(file, firstName, lastName);
+
     const User = {
       firstName,
       lastName,
+      profile: profileUpload.secure_url,
       email,
       gender,
       age,
@@ -58,7 +80,7 @@ const LogIn = async (req, res) => {
       return res.status(400).send({ message: "Invalid Credentials" });
     }
 
-    const Token = jwt.sign(Findemail.id, "MangeshSali");
+    const Token = jwt.sign(Findemail.id, process.env.JWT_SECRET);
     res.cookie("token", Token);
     res.status(200).send({ messgae: "User Login Sucessfully" });
     req.user = Findemail;

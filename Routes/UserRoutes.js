@@ -1,6 +1,7 @@
 const express = require("express");
 const { Signup, LogIn, Profile } = require("../Controllers/UserControllers");
 const Auth = require("../Middleware/Auth");
+const upload = require("../Middleware/Upload");
 
 const routes = express.Router();
 
@@ -10,7 +11,7 @@ routes.get("/home", (req, res) => {
   });
 });
 
-routes.post("/signup", Signup);
+routes.post("/signup", upload.single("profile"), Signup);
 routes.post("/login", LogIn);
 routes.get("/profile", Auth, Profile);
 

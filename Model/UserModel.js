@@ -11,6 +11,11 @@ const UserModel = mongoose.Schema(
       type: "String",
       trim: true,
     },
+    profile: {
+      type: "String",
+      default:
+        "https://res.cloudinary.com/dvzzmfhjl/image/upload/v1739568680/profile/irt3tuyqshdklijnj8.png",
+    },
     email: {
       type: "String",
       required: true,
