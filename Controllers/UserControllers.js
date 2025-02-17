@@ -82,18 +82,36 @@ const LogIn = async (req, res) => {
 
     const Token = jwt.sign(Findemail.id, process.env.JWT_SECRET);
     res.cookie("token", Token);
-    res.status(200).send({ messgae: "User Login Sucessfully" });
+
+    const SendUserData = {
+      email: Findemail.email,
+      firstName: Findemail.firstName,
+      lastName: Findemail.lastName,
+      profilePhoto: Findemail.profile,
+    };
+    res.status(200).send(SendUserData);
     req.user = Findemail;
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
+const LogOut = async (req, res) => {
+  try {
+    res.clearCookie("token").send({ message: "Logout SucessFully" });
+  } catch (error) {
+    return res.status(500).send({ message: error.message });
+  }
+};
+
 const Profile = async (req, res) => {
   try {
-    res.status(200).send(req.user);
+    const UserData = { ...req.user };
+    delete UserData._doc.password;
+    res.status(200).send(UserData._doc);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
-module.exports = { Signup, LogIn, Profile };
+
+module.exports = { Signup, LogIn, Profile, LogOut };

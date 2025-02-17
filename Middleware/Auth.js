@@ -7,7 +7,7 @@ const Auth = async (req, res, next) => {
     const { token } = req.cookies;
 
     if (!token) {
-      return res.send({ message: "Invalid Token" });
+      return res.status(500).send({ message: "Invalid Token" });
     }
 
     const DecodedToken = jwt.verify(token, process.env.JWT_SECRET);
@@ -15,7 +15,7 @@ const Auth = async (req, res, next) => {
     const FindUser = await UserModel.findOne({ _id: DecodedToken });
 
     if (!FindUser) {
-      return res.send({ message: "Invalid User" });
+      return res.status(400).send({ message: "Invalid User" });
     }
 
     req.user = FindUser;
