@@ -15,7 +15,7 @@ const ProfileCloudinary = async (file, firstName, lastName) => {
       ],
     });
 
-    fs.unlink(file.path, (err) => {
+    await fs.unlink(file.path, (err) => {
       if (err) {
         console.error("Error deleting local file:", err);
       } else {

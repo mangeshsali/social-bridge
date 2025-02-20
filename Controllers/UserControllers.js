@@ -90,7 +90,7 @@ const LogIn = async (req, res) => {
       profilePhoto: Findemail.profile,
     };
     res.status(200).send(SendUserData);
-    req.user = Findemail;
+    // req.user = Findemail;
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -114,4 +114,16 @@ const Profile = async (req, res) => {
   }
 };
 
-module.exports = { Signup, LogIn, Profile, LogOut };
+const UpdateProfile = async (req, res) => {
+  try {
+    const file = req.file;
+    const { firstName, lastName } = req.user;
+
+    const ImageUpload = await ProfileCloudinary(file, firstName, lastName);
+
+    res.status(200).send({ message: ImageUpload.secure_url });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+};
+module.exports = { Signup, LogIn, Profile, LogOut, UpdateProfile };
