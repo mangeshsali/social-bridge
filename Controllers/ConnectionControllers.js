@@ -118,7 +118,7 @@ const RequestAllReview = async (req, res) => {
       toUserId: LogInUserID,
       status: "interested",
     })
-      .populate("fromUserId", ["firstName", "lastName"])
+      .populate("fromUserId", ["firstName", "lastName", "profile"])
       .select(["fromUserId", "status"]);
 
     if (FindReq.length == 0) {

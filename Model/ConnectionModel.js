@@ -16,7 +16,7 @@ const ConnectionModel = mongoose.Schema(
       message: "{VALUE} Status Not Valid",
     },
   },
-  { timeStamps: true }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Connection", ConnectionModel);

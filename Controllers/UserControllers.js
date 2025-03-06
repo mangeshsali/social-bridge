@@ -6,12 +6,12 @@ require("dotenv").config();
 
 const Signup = async (req, res) => {
   try {
-    const { firstName, lastName, email, gender, age, password } = req.body;
+    console.log("request", req.file);
+    const { firstName, lastName, email, password, about, skills } = req.body;
     const file = req.file;
-
     const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png"];
 
-    if (!firstName || !lastName || !email || !gender || !age || !password) {
+    if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -44,9 +44,9 @@ const Signup = async (req, res) => {
       lastName,
       profile: profileUpload.secure_url,
       email,
-      gender,
-      age,
       password: passwordHash,
+      about,
+      skills,
     };
 
     const UserData = new UserModel(User);
@@ -87,7 +87,7 @@ const LogIn = async (req, res) => {
       email: Findemail.email,
       firstName: Findemail.firstName,
       lastName: Findemail.lastName,
-      profilePhoto: Findemail.profile,
+      profile: Findemail.profile,
     };
     res.status(200).send(SendUserData);
     // req.user = Findemail;
@@ -106,9 +106,13 @@ const LogOut = async (req, res) => {
 
 const Profile = async (req, res) => {
   try {
-    const UserData = { ...req.user };
-    delete UserData._doc.password;
-    res.status(200).send(UserData._doc);
+    const { _id } = req.user;
+    const FindUser = await UserModel.findOne({ _id });
+
+    if (!FindUser) {
+      res.status(200).send({ message: "User Data Not Found" });
+    }
+    res.status(200).send(FindUser);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -126,4 +130,40 @@ const UpdateProfile = async (req, res) => {
     res.status(500).send({ message: error.message });
   }
 };
-module.exports = { Signup, LogIn, Profile, LogOut, UpdateProfile };
+
+const Updateinfo = async (req, res) => {
+  try {
+    const { firstName, lastName, email, location, bio, about, skills } =
+      req.body;
+
+    const { _id } = req.user;
+
+    const FindUser = await UserModel.findOne({ _id });
+
+    if (!FindUser) {
+      res.status(400).send({ message: "User Not Found" });
+    }
+
+    const UserData = {
+      firstName,
+      lastName,
+      email,
+      location,
+      bio,
+      about,
+      skills,
+    };
+
+    const Updated = await UserModel.findOneAndUpdate(
+      { _id },
+      { $set: UserData },
+      { new: true }
+    );
+    res.status(200).send({ user: Updated });
+
+    console.log("user", UpdateProfile);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+};
+module.exports = { Signup, LogIn, Profile, LogOut, UpdateProfile, Updateinfo };

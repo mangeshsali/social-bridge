@@ -2,18 +2,11 @@ const cloudinary = require("../config/Cloudinary");
 require("dotenv").config();
 const fs = require("fs");
 
-const ProfileCloudinary = async (file, firstName, lastName) => {
+const PostCloudinary = async (file) => {
   try {
     console.log("===>", file.path);
     const result = await cloudinary.uploader.upload(file.path, {
-      folder: process.env.CLOUDINARY_FOLDER,
-      public_id: `${firstName}_${lastName}`,
-      overwrite: true,
-      transformation: [
-        { width: 400, height: 400, crop: "fill" },
-        { quality: "90" },
-        { gravity: "face" },
-      ],
+      folder: process.env.CLOUDINARY_POST_FOLDER,
     });
 
     await fs.unlink(file.path, (err) => {
@@ -30,4 +23,4 @@ const ProfileCloudinary = async (file, firstName, lastName) => {
   }
 };
 
-module.exports = ProfileCloudinary;
+module.exports = PostCloudinary;
