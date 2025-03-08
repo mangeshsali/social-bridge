@@ -19,7 +19,7 @@ const PostCreate = async (req, res) => {
 
     const ImageResp = await PostCloudinary(Files);
 
-    if (!ImageResp || ImageResp.secure_url) {
+    if (!ImageResp || !ImageResp.secure_url) {
       return res.status(500).send({ message: "Image Upload Failed" });
     }
 
@@ -163,4 +163,30 @@ const UserPost = async (req, res) => {
   }
 };
 
-module.exports = { PostCreate, PostLike, CommentCreate, CommentLike, UserPost };
+const PostDelete = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const FindPost = await PostModel.findById({ _id: id });
+
+    if (!FindPost) {
+      return res.status(400).send({ message: "post not found" });
+    }
+
+    await PostModel.findByIdAndDelete({ _id: id });
+
+    res.status(200).send({ message: "Deleted Successfully" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send({ message: error.message });
+  }
+};
+
+module.exports = {
+  PostCreate,
+  PostLike,
+  CommentCreate,
+  CommentLike,
+  UserPost,
+  PostDelete,
+};

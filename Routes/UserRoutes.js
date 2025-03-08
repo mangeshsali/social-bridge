@@ -22,7 +22,12 @@ const {
   CommentCreate,
   CommentLike,
   UserPost,
+  PostDelete,
 } = require("../Controllers/PostController");
+const {
+  GithubCreate,
+  GithubDelete,
+} = require("../Controllers/SocialConnectController");
 
 const routes = express.Router();
 
@@ -53,5 +58,9 @@ routes.get("/post", Auth, UserPost);
 routes.post("/postlike/:id", Auth, PostLike);
 routes.post("/comment/:id", Auth, CommentCreate);
 routes.post("/commentlike/:id", Auth, CommentLike);
+routes.delete("/post/:id", Auth, PostDelete);
 
+// Social Connect
+routes.post("/socialgithub", Auth, GithubCreate);
+routes.delete("/socialgithub", Auth, GithubDelete);
 module.exports = routes;

@@ -63,6 +63,9 @@ const UserModel = mongoose.Schema(
       maxLength: 50,
       default: "Add Bio",
     },
+    githubLink: {
+      type: "String",
+    },
     skills: {
       type: [String],
       default: [
