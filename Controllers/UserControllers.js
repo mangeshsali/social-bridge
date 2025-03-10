@@ -2,11 +2,12 @@ const UserModel = require("../Model/UserModel");
 const bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
 const ProfileCloudinary = require("../Utils/ProfileCloudinary");
+const PostModel = require("../Model/PostModel");
+const ConnectionModel = require("../Model/ConnectionModel");
 require("dotenv").config();
 
 const Signup = async (req, res) => {
   try {
-    console.log("request", req.file);
     const { firstName, lastName, email, password, about, skills } = req.body;
     const file = req.file;
     const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png"];
@@ -67,8 +68,6 @@ const LogIn = async (req, res) => {
     }
 
     const Findemail = await UserModel.findOne({ email });
-
-    console.log(Findemail);
 
     if (!Findemail) {
       return res.status(400).send({ message: "Please Register First" });
@@ -160,10 +159,74 @@ const Updateinfo = async (req, res) => {
       { new: true }
     );
     res.status(200).send({ user: Updated });
-
-    console.log("user", UpdateProfile);
   } catch (error) {
     res.status(500).send({ message: error.message });
   }
 };
-module.exports = { Signup, LogIn, Profile, LogOut, UpdateProfile, Updateinfo };
+
+// const feed = async (res, req) => {
+//   try {
+//     const { _id } = req.user;
+
+//     const FindUser = await UserModel.findById(_id);
+//     if (!FindUser) {
+//       return res.status(200).send({ message: "User Not Found" });
+//     }
+//   } catch (error) {
+//     console.log(error.message);
+//     res.status(500).send({ message: error.message });
+//   }
+// };
+
+const feed = async (req, res) => {
+  try {
+    const { _id: LogInID } = req.user;
+
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    limit = limit > 50 ? 50 : limit;
+
+    const skip = (page - 1) * limit;
+
+    const FindConnection = await ConnectionModel.find({
+      $or: [{ fromUserId: LogInID }, { toUserId: LogInID }],
+    });
+
+    const ConnectionFilter = FindConnection.reduce((acc, curr) => {
+      if (curr.fromUserId.toString() === LogInID.toString()) {
+        acc.push(curr.toUserId);
+      } else if (curr.toUserId.toString() === LogInID.toString()) {
+        acc.push(curr.fromUserId);
+      }
+      return acc;
+    }, []);
+
+    const FindUser = await PostModel.find({
+      userId: { $in: [...ConnectionFilter, LogInID] },
+    })
+      .skip(skip)
+      .limit(limit);
+
+    if (FindUser.length === 0) {
+      return res.send({ message: "No Post Found" }).status(200);
+    }
+
+    res.send(FindUser);
+  } catch (error) {
+    res
+      .send({
+        error: error.message,
+      })
+      .status(400);
+  }
+};
+
+module.exports = {
+  Signup,
+  LogIn,
+  Profile,
+  LogOut,
+  UpdateProfile,
+  Updateinfo,
+  feed,
+};

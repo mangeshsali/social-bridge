@@ -6,6 +6,7 @@ const {
   LogOut,
   UpdateProfile,
   Updateinfo,
+  feed,
 } = require("../Controllers/UserControllers");
 const Auth = require("../Middleware/Auth");
 const upload = require("../Middleware/Upload");
@@ -43,6 +44,7 @@ routes.post("/logout", Auth, LogOut);
 routes.get("/profile", Auth, Profile);
 routes.put("/uploadprofile", Auth, upload.single("profile"), UpdateProfile);
 routes.put("/updateinfo", Auth, Updateinfo);
+routes.get("/feed", Auth, feed);
 
 // User Project
 

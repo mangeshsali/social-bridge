@@ -172,7 +172,7 @@ const ConnectionsAll = async (req, res) => {
   }
 };
 
-const FeedSuggestion = async (req, res) => {
+const ConnectionSuggestion = async (req, res) => {
   try {
     const { _id: LogInID } = req.user;
 
@@ -221,5 +221,5 @@ module.exports = {
   RequestReview,
   RequestAllReview,
   ConnectionsAll,
-  FeedSuggestion,
+  ConnectionSuggestion,
 };

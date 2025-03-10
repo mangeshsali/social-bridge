@@ -5,7 +5,7 @@ const {
   RequestReview,
   RequestAllReview,
   ConnectionsAll,
-  FeedSuggestion,
+  ConnectionSuggestion,
 } = require("../Controllers/ConnectionControllers");
 
 const Requestrouter = express.Router();
@@ -14,6 +14,6 @@ Requestrouter.post("/request/send/:status/:toUserId", Auth, SendRequest);
 Requestrouter.post("/request/review/:status/:requestId", Auth, RequestReview);
 Requestrouter.get("/request/review", Auth, RequestAllReview);
 Requestrouter.get("/connections", Auth, ConnectionsAll);
-Requestrouter.get("/feed/", Auth, FeedSuggestion);
+Requestrouter.get("/suggestion", Auth, ConnectionSuggestion);
 
 module.exports = Requestrouter;
