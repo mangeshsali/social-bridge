@@ -54,7 +54,7 @@ const ProjectList = async (req, res) => {
     if (FindList.length === 0) {
       return res.status(200).send({ message: "No Project Found" });
     }
-    res.status(200).send(FindList);
+    res.status(200).send({ project: FindList });
   } catch (error) {
     res.status(500).send({ message: error.message });
     console.log(error.message);

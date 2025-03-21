@@ -28,7 +28,12 @@ const PostModel = mongoose.Schema(
         ref: "comment",
       },
     ],
+    isLike: {
+      type: Boolean,
+      default: false,
+    },
   },
+
   { timestamps: true }
 );
 

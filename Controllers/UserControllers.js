@@ -120,11 +120,28 @@ const Profile = async (req, res) => {
 const UpdateProfile = async (req, res) => {
   try {
     const file = req.file;
-    const { firstName, lastName } = req.user;
+    const { firstName, lastName, _id } = req.user;
 
     const ImageUpload = await ProfileCloudinary(file, firstName, lastName);
 
-    res.status(200).send({ message: ImageUpload.secure_url });
+    if (!ImageUpload || !ImageUpload.secure_url) {
+      return res.status(500).send({ message: "Image Upload Failed" });
+    }
+
+    const FindUser = await UserModel.findByIdAndUpdate(
+      _id,
+      { profile: ImageUpload.secure_url },
+      { new: true }
+    );
+
+    if (!FindUser) {
+      return res.status(403).send({ message: "User Not Found" });
+    }
+
+    await res.status(200).send({
+      message: "Updated Successfully",
+      profile: ImageUpload.secure_url,
+    });
   } catch (error) {
     res.status(500).send({ message: error.message });
   }
@@ -204,6 +221,7 @@ const feed = async (req, res) => {
     const FindUser = await PostModel.find({
       userId: { $in: [...ConnectionFilter, LogInID] },
     })
+      .populate("userId", ["profile", "bio", "lastName", "firstName"])
       .skip(skip)
       .limit(limit);
 

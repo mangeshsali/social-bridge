@@ -1,6 +1,6 @@
 const SocialConnectModel = require("../Model/SocialConnectModel");
 const UserModel = require("../Model/UserModel");
-const { GithubRepoData } = require("../Utils/GithubRepoData");
+const GithubRepoData = require("../Utils/GithubRepoData");
 
 const GithubCreate = async (req, res) => {
   try {
@@ -18,7 +18,9 @@ const GithubCreate = async (req, res) => {
     const GithubData = await GithubRepoData(GithubUser);
 
     if (GithubData.status === "404" || GithubData.length === 0) {
-      return res.status(400).send({ message: "Github Repo Not Found" });
+      return res.status(400).send({
+        message: "Please Enter Valid User Name",
+      });
     }
 
     const GithubRepo = GithubData.map((repo) => {
@@ -84,4 +86,25 @@ const GithubDelete = async (req, res) => {
   }
 };
 
-module.exports = { GithubCreate, GithubDelete };
+const GithubData = async (req, res) => {
+  try {
+    const { _id } = req.user;
+
+    const FindUser = await UserModel.findById(_id);
+    if (!FindUser) {
+      return res.status(400).send({ message: "User Not Found" });
+    }
+
+    const FindGithub = await SocialConnectModel.findOne({ userId: _id });
+
+    if (!FindGithub) {
+      return res.status(200).send({ message: "Please Connect Github First" });
+    }
+    res.status(201).send(FindGithub);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send({ message: error.message });
+  }
+};
+
+module.exports = { GithubCreate, GithubDelete, GithubData };

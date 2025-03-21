@@ -19,14 +19,14 @@ const PostCreate = async (req, res) => {
 
     const ImageResp = await PostCloudinary(Files);
 
-    if (!ImageResp || !ImageResp.secure_url) {
-      return res.status(500).send({ message: "Image Upload Failed" });
-    }
+    // if (!ImageResp || !ImageResp.secure_url) {
+    //   return res.status(500).send({ message: "Image Upload Failed" });
+    // }
 
     const UserData = {
       userId: _id,
       post,
-      Image: ImageResp.secure_url,
+      Image: ImageResp?.secure_url || null,
     };
 
     const newPost = new PostModel(UserData);
@@ -57,19 +57,17 @@ const PostLike = async (req, res) => {
 
     const isLiked = Findpost.Like.includes(_id.toString());
 
-    if (isLiked) {
-      Findpost.Like = Findpost.Like.filter(
-        (post) => post.toString() !== _id.toString()
-      );
-    } else {
-      Findpost.Like.push(_id);
-    }
+    const UpdatedPost = await PostModel.findByIdAndUpdate(
+      id,
+      isLiked
+        ? { $pull: { Like: _id }, isLike: false }
+        : { $addToSet: { Like: _id }, isLike: true }
+    );
 
-    await Findpost.save();
+    // await Findpost.save();
+
     res.status(200).send({
-      message: `${
-        isLiked ? `Post Like ${firstName}` : `Post UnLike By ${firstName}`
-      }`,
+      message: UpdatedPost,
     });
   } catch (error) {
     console.log(error.message);
@@ -154,7 +152,12 @@ const UserPost = async (req, res) => {
   try {
     const { _id } = req.user;
 
-    const FindPosts = await PostModel.find({ userId: _id });
+    const FindPosts = await PostModel.find({ userId: _id }).populate("userId", [
+      "firstName",
+      "lastName",
+      "bio",
+      "profile",
+    ]);
 
     res.status(200).send({ message: "User Post", posts: FindPosts });
   } catch (error) {

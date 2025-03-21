@@ -28,6 +28,7 @@ const {
 const {
   GithubCreate,
   GithubDelete,
+  GithubData,
 } = require("../Controllers/SocialConnectController");
 
 const routes = express.Router();
@@ -65,4 +66,5 @@ routes.delete("/post/:id", Auth, PostDelete);
 // Social Connect
 routes.post("/socialgithub", Auth, GithubCreate);
 routes.delete("/socialgithub", Auth, GithubDelete);
+routes.get("/socialgithub", Auth, GithubData);
 module.exports = routes;
