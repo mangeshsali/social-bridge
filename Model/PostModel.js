@@ -12,6 +12,7 @@ const PostModel = mongoose.Schema(
       type: "String",
       required: true,
       trim: true,
+      index: true,
     },
     Image: {
       type: "String",
@@ -37,4 +38,5 @@ const PostModel = mongoose.Schema(
   { timestamps: true }
 );
 
+PostModel.index({ post: 1 });
 module.exports = mongoose.model("post", PostModel);

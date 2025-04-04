@@ -1,6 +1,7 @@
 const { default: mongoose } = require("mongoose");
 const ConnectionModel = require("../Model/ConnectionModel");
 const UserModel = require("../Model/UserModel");
+const PostModel = require("../Model/PostModel");
 
 const SendRequest = async (req, res) => {
   try {
@@ -118,7 +119,7 @@ const RequestAllReview = async (req, res) => {
       toUserId: LogInUserID,
       status: "interested",
     })
-      .populate("fromUserId", ["firstName", "lastName", "profile"])
+      .populate("fromUserId", ["firstName", "lastName", "profile", "bio"])
       .select(["fromUserId", "status"]);
 
     if (FindReq.length == 0) {
@@ -145,8 +146,8 @@ const ConnectionsAll = async (req, res) => {
         { toUserId: LogInID, status: "accepted" },
       ],
     })
-      .populate("toUserId", ["firstName", "lastName"])
-      .populate("fromUserId", ["firstName", "lastName"])
+      .populate("toUserId", ["firstName", "lastName", "profile", "bio"])
+      .populate("fromUserId", ["firstName", "lastName", "profile", "bio"])
       .select(["fromUserID", "toUserId"]);
 
     if (FindALLConnections.length === 0) {
@@ -200,7 +201,7 @@ const ConnectionSuggestion = async (req, res) => {
     })
       .skip(skip)
       .limit(limit)
-      .select(["firstName", "lastName"]);
+      .select(["firstName", "lastName", "profile", "bio"]);
 
     if (FindUser.length === 0) {
       return res.send({ message: "No User Found" }).status(200);
@@ -216,10 +217,60 @@ const ConnectionSuggestion = async (req, res) => {
   }
 };
 
+const ConnectionSearch = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const SearchQuery = req.query.search;
+    const SearchType = req.query.type;
+
+    const FindCurrentUser = await UserModel.findById(_id);
+    if (!FindCurrentUser) {
+      return res.status(400).send({ message: "User is Not Valid" });
+    }
+
+    let result = [];
+
+    if (SearchType === "person") {
+      result = await UserModel.find({
+        $or: [
+          { firstName: { $regex: `^${SearchQuery}`, $options: "i" } },
+          {
+            lastName: { $regex: `^${SearchQuery}`, $options: "i" },
+          },
+          { location: { $regex: `^${SearchQuery}`, $options: "i" } },
+          { bio: { $regex: `^${SearchQuery}`, $options: "i" } },
+          { about: { $regex: `^${SearchQuery}`, $options: "i" } },
+        ],
+      });
+
+      if (result.length === 0) {
+        return res
+          .status(200)
+          .send({ type: "person", result: "Person not found" });
+      }
+    } else {
+      result = await PostModel.find({
+        post: { $regex: SearchQuery, $options: "i" },
+      }).populate("userId", ["firstName", "lastName", "bio", "profile"]);
+
+      if (result.length === 0) {
+        return res.status(200).send({ type: "post", result: "Post Not Found" });
+      }
+    }
+
+    res.status(200).send({ type: SearchType, result: result });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   SendRequest,
   RequestReview,
   RequestAllReview,
   ConnectionsAll,
   ConnectionSuggestion,
+  ConnectionSearch,
 };

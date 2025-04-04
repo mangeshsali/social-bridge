@@ -61,7 +61,8 @@ const PostLike = async (req, res) => {
       id,
       isLiked
         ? { $pull: { Like: _id }, isLike: false }
-        : { $addToSet: { Like: _id }, isLike: true }
+        : { $addToSet: { Like: _id }, isLike: true },
+      { new: true }
     );
 
     // await Findpost.save();

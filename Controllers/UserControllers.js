@@ -4,6 +4,7 @@ var jwt = require("jsonwebtoken");
 const ProfileCloudinary = require("../Utils/ProfileCloudinary");
 const PostModel = require("../Model/PostModel");
 const ConnectionModel = require("../Model/ConnectionModel");
+const { param } = require("../Routes/RequestRoutes");
 require("dotenv").config();
 
 const Signup = async (req, res) => {
@@ -87,6 +88,7 @@ const LogIn = async (req, res) => {
       firstName: Findemail.firstName,
       lastName: Findemail.lastName,
       profile: Findemail.profile,
+      token: Token,
     };
     res.status(200).send(SendUserData);
     // req.user = Findemail;
@@ -106,11 +108,33 @@ const LogOut = async (req, res) => {
 const Profile = async (req, res) => {
   try {
     const { _id } = req.user;
-    const FindUser = await UserModel.findOne({ _id });
+    const FindUser = await UserModel.findOne({ _id }).lean();
 
     if (!FindUser) {
       res.status(200).send({ message: "User Data Not Found" });
     }
+
+    const FindALLConnections = await ConnectionModel.find({
+      $or: [
+        { fromUserId: _id, status: "accepted" },
+        { toUserId: _id, status: "accepted" },
+      ],
+    })
+      .populate("toUserId", ["firstName", "lastName", "profile", "bio"])
+      .populate("fromUserId", ["firstName", "lastName", "profile", "bio"])
+      .select(["fromUserID", "toUserId"]);
+
+    const updatedData = FindALLConnections.map((conn) => {
+      if (conn.toUserId._id.toString() === _id.toString()) {
+        return conn.fromUserId;
+      }
+      if (conn.fromUserId._id.toString() === _id.toString()) {
+        return conn.toUserId;
+      }
+    });
+
+    FindUser["connection"] = updatedData;
+
     res.status(200).send(FindUser);
   } catch (error) {
     return res.status(500).json({ message: error.message });

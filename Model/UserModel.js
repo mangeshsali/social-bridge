@@ -6,15 +6,17 @@ const UserModel = mongoose.Schema(
     firstName: {
       type: "String",
       trim: true,
+      index: true,
     },
     lastName: {
       type: "String",
       trim: true,
+      index: true,
     },
     profile: {
       type: "String",
       default:
-        "https://res.cloudinary.com/dvzzmfhjl/image/upload/v1739568680/profile/irt3tuyqshdklijnj8.png",
+        "https://res.cloudinary.com/dvzzmfhjl/image/upload/v1739568680/profile/irt3t7uuyqshdklijnj8.png",
     },
     email: {
       type: "String",
@@ -51,6 +53,7 @@ const UserModel = mongoose.Schema(
     location: {
       type: "String",
       default: "India",
+      index: true,
     },
     about: {
       type: "String",
@@ -62,6 +65,7 @@ const UserModel = mongoose.Schema(
       type: "String",
       maxLength: 50,
       default: "Add Bio",
+      index: true,
     },
     githubLink: {
       type: "String",
@@ -85,4 +89,5 @@ const UserModel = mongoose.Schema(
   { timeStamp: true }
 );
 
+UserModel.index({ firstName: 1, lastName: 1, bio: 1, location: 1, about: 1 });
 module.exports = mongoose.model("user", UserModel);
