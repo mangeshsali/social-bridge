@@ -55,7 +55,6 @@ routes.get("/projectlist", Auth, ProjectList);
 routes.delete("/deleteproject/:id", Auth, ProjectDelete);
 
 //Post Routes
-
 routes.post("/post", Auth, upload.single("Image"), PostCreate);
 routes.get("/post", Auth, UserPost);
 routes.post("/postlike/:id", Auth, PostLike);

@@ -31,8 +31,9 @@ const ProjectCreate = async (req, res) => {
     };
 
     const Project = new ProjectModel(UserData);
+
     await Project.save();
-    res.status(200).send({ message: "Project Successfully Created" });
+    res.status(200).send(Project);
   } catch (error) {
     res.status(500).send({ message: error.message });
     console.log("error in Project", error.message);
@@ -75,7 +76,9 @@ const ProjectDelete = async (req, res) => {
     { new: true }
   );
 
-  res.status(200).send(`${DeletProject.projectName} Deleted SuccessFully`);
+  res
+    .status(200)
+    .send({ message: `${DeletProject.projectName} Deleted SuccessFully` });
   try {
   } catch (error) {
     res.status(500).send({ message: error.message });

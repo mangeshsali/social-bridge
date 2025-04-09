@@ -4,7 +4,7 @@ const GithubRepoData = async (user) => {
       `https://api.github.com/users/${user}/repos?per_page=4&sort=updated&direction=desc`
     );
 
-    const data = res.json();
+    const data = await res.json();
     return data;
   } catch (error) {
     console.log("error in GihubData", error.message);

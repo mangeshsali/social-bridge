@@ -151,7 +151,9 @@ const ConnectionsAll = async (req, res) => {
       .select(["fromUserID", "toUserId"]);
 
     if (FindALLConnections.length === 0) {
-      return res.status(200).send({ message: "No Connection Found" });
+      return res
+        .status(200)
+        .send({ message: "No Connection Found", result: FindALLConnections });
     }
 
     const updatedData = FindALLConnections.map((conn) => {
@@ -163,7 +165,7 @@ const ConnectionsAll = async (req, res) => {
       }
     });
 
-    res.status(200).send(updatedData);
+    res.status(200).send({ message: "Connection FOund", result: updatedData });
   } catch (error) {
     res
       .send({

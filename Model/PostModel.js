@@ -12,7 +12,7 @@ const PostModel = mongoose.Schema(
       type: "String",
       required: true,
       trim: true,
-      index: true,
+      // index: true,
     },
     Image: {
       type: "String",
