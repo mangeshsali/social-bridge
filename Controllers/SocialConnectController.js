@@ -86,7 +86,7 @@ const GithubDelete = async (req, res) => {
   }
 };
 
-const GithubData = async (req, res) => {
+const GithubInfo = async (req, res) => {
   try {
     const { _id } = req.user;
 
@@ -102,6 +102,10 @@ const GithubData = async (req, res) => {
 
     const GithubUser = FindGithub.githubUser;
     const GithubData = await GithubRepoData(GithubUser);
+
+    if (!Array.isArray(GithubData)) {
+      return res.status(400).send({ message: GithubData.message });
+    }
 
     const GithubRepo = GithubData.map((repo) => {
       return {
@@ -133,4 +137,4 @@ const GithubData = async (req, res) => {
   }
 };
 
-module.exports = { GithubCreate, GithubDelete, GithubData };
+module.exports = { GithubCreate, GithubDelete, GithubInfo };
