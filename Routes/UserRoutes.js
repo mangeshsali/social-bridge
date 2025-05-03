@@ -31,6 +31,7 @@ const {
   GithubData,
   GithubInfo,
 } = require("../Controllers/SocialConnectController");
+const ChatController = require("../Controllers/ChatController");
 
 const routes = express.Router();
 
@@ -67,4 +68,8 @@ routes.delete("/post/:id", Auth, PostDelete);
 routes.post("/socialgithub", Auth, GithubCreate);
 routes.delete("/socialgithub", Auth, GithubDelete);
 routes.get("/socialgithub", Auth, GithubInfo);
+
+//Chat
+routes.get("/chat/:targetId", Auth, ChatController);
+
 module.exports = routes;

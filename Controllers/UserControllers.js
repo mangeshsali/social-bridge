@@ -135,6 +135,7 @@ const Profile = async (req, res) => {
 
     FindUser["connection"] = updatedData;
 
+    delete FindUser.password;
     res.status(200).send(FindUser);
   } catch (error) {
     return res.status(500).json({ message: error.message });
