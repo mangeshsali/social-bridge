@@ -1,3 +1,4 @@
+const { mongo, default: mongoose } = require("mongoose");
 const CommentModel = require("../Model/CommentModel");
 const PostModel = require("../Model/PostModel");
 const UserModel = require("../Model/UserModel");
@@ -84,15 +85,18 @@ const CommentCreate = async (req, res) => {
 
     const { comment } = req.body;
 
-    const FindUser = await UserModel.findOne({ _id });
+    if (!comment) {
+      return res.status(400).send({ message: "Comment is Required" });
+    }
 
-    const Findpost = await PostModel.findOne({ _id: id });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ message: "Invalid Post ID" });
+    }
+
+    const Findpost = await PostModel.findById(id);
 
     if (!Findpost) {
       return res.status(400).send({ message: "Post Not Found" });
-    }
-    if (!FindUser) {
-      return res.status(400).send({ message: "User Not Found" });
     }
 
     const CommentData = {
@@ -110,7 +114,7 @@ const CommentCreate = async (req, res) => {
     res.status(201).json({ message: "Comment Added", comment: NewComment });
   } catch (error) {
     console.log(error.message);
-    res.status(500).send({ message: error.message });
+    res.status(500).send({ error: "Error in comment", message: error.message });
   }
 };
 
