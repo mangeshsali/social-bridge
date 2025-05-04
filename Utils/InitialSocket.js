@@ -1,6 +1,7 @@
 const socket = require("socket.io");
 const crypto = require("crypto");
 const chatModel = require("../Model/ChatModel");
+const MessageModel = require("../Model/MessageModel");
 
 const InitialSocket = (server) => {
   const io = socket(server, {
@@ -48,17 +49,17 @@ const InitialSocket = (server) => {
         if (!Chat) {
           Chat = new chatModel({
             participants: [userID, targetID],
-            messages: [],
           });
+          await Chat.save();
         }
 
-        Chat.messages.push({
+        const message = new MessageModel({
+          chatId: Chat._id,
           senderId: userID,
           recieverId: targetID,
           text: text,
         });
-
-        await Chat.save();
+        await message.save();
 
         io.to(RoomID).emit("recivedMessage", {
           userID,
