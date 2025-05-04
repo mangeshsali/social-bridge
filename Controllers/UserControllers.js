@@ -251,10 +251,23 @@ const feed = async (req, res) => {
       .limit(limit);
 
     if (FindUser.length === 0) {
-      return res.send({ message: "No Post Found" }).status(200);
+      return res
+        .send({ success: true, message: "No Post Found", posts: null })
+        .status(200);
     }
 
-    res.send(FindUser);
+    const UpdateIsLinked = FindUser.map((post) => {
+      const isLiked = post.Like.includes(LogInID.toString());
+      if (isLiked) {
+        return { ...post._doc, isLike: true };
+      } else {
+        return { ...post._doc, isLike: false };
+      }
+    });
+
+    res
+      .status(200)
+      .send({ success: true, message: "Post Found", posts: UpdateIsLinked });
   } catch (error) {
     res
       .send({

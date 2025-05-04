@@ -60,13 +60,11 @@ const PostLike = async (req, res) => {
 
     const UpdatedPost = await PostModel.findByIdAndUpdate(
       id,
-      isLiked
-        ? { $pull: { Like: _id }, isLike: false }
-        : { $addToSet: { Like: _id }, isLike: true },
+      isLiked ? { $pull: { Like: _id } } : { $addToSet: { Like: _id } },
       { new: true }
     );
 
-    // await Findpost.save();
+    await Findpost.save();
 
     res.status(200).send({
       message: UpdatedPost,
