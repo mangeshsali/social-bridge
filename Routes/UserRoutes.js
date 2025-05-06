@@ -24,6 +24,7 @@ const {
   CommentLike,
   UserPost,
   PostDelete,
+  CommentDelete,
 } = require("../Controllers/PostController");
 const {
   GithubCreate,
@@ -61,6 +62,7 @@ routes.post("/post", Auth, upload.single("Image"), PostCreate);
 routes.get("/post", Auth, UserPost);
 routes.post("/postlike/:id", Auth, PostLike);
 routes.post("/comment/:id", Auth, CommentCreate);
+routes.delete("/comment/:id", Auth, CommentDelete);
 routes.post("/commentlike/:id", Auth, CommentLike);
 routes.delete("/post/:id", Auth, PostDelete);
 

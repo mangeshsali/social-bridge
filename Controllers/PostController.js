@@ -3,6 +3,7 @@ const CommentModel = require("../Model/CommentModel");
 const PostModel = require("../Model/PostModel");
 const UserModel = require("../Model/UserModel");
 const PostCloudinary = require("../Utils/PostCloudinary");
+const LikeModel = require("../Model/LikeModel");
 
 const PostCreate = async (req, res) => {
   try {
@@ -41,7 +42,7 @@ const PostCreate = async (req, res) => {
 
 const PostLike = async (req, res) => {
   try {
-    const { _id, firstName } = req.user;
+    const { _id } = req.user;
 
     const { id } = req.params;
 
@@ -56,19 +57,46 @@ const PostLike = async (req, res) => {
       return res.status(400).send({ message: "User Not Found" });
     }
 
-    const isLiked = Findpost.Like.includes(_id.toString());
-
-    const UpdatedPost = await PostModel.findByIdAndUpdate(
-      id,
-      isLiked ? { $pull: { Like: _id } } : { $addToSet: { Like: _id } },
-      { new: true }
-    );
-
-    await Findpost.save();
-
-    res.status(200).send({
-      message: UpdatedPost,
+    const isLikedCheck = await LikeModel.findOne({
+      postId: id,
+      userId: _id,
     });
+
+    if (!isLikedCheck) {
+      const UpdatedPayload = {
+        postId: Findpost._id,
+        userId: _id,
+      };
+      const UpdatedPost = new LikeModel(UpdatedPayload);
+      await UpdatedPost.save();
+
+      const LikesCount = await LikeModel.countDocuments({ postId: id });
+
+      const FindUpdatedPost = await PostModel.findByIdAndUpdate(
+        { _id: id },
+        { likeCount: LikesCount, isLike: true },
+        { new: true }
+      ).populate("userId", ["firstName", "lastName", "profile", "bio"]);
+
+      // FindPost.isLike = true;
+      return res.status(200).send({
+        message: "Post Liked",
+        post: FindUpdatedPost,
+      });
+    } else {
+      await LikeModel.findByIdAndDelete({ _id: isLikedCheck._id });
+
+      const FindUpdatedPost = await PostModel.findByIdAndUpdate(
+        { _id: id },
+        { $inc: { likeCount: -1 }, $set: { isLike: false } },
+        { new: true }
+      ).populate("userId", ["firstName", "lastName", "profile", "bio"]);
+
+      return res.status(200).send({
+        message: "DisLiked",
+        post: FindUpdatedPost,
+      });
+    }
   } catch (error) {
     console.log(error.message);
     res.status(500).send({ message: error.message });
@@ -106,10 +134,54 @@ const CommentCreate = async (req, res) => {
     const NewComment = new CommentModel(CommentData);
     await NewComment.save();
 
-    Findpost.Comment.push(NewComment._id.toString());
-    await Findpost.save();
+    const FindCommentCount = await CommentModel.countDocuments({ postId: id });
 
-    res.status(201).json({ message: "Comment Added", comment: NewComment });
+    const FindUpdatedPost = await PostModel.findByIdAndUpdate(
+      { _id: id },
+      { $set: { commentCount: FindCommentCount } },
+      { new: true }
+    ).populate("userId", ["firstName", "lastName", "profile", "bio"]);
+
+    res
+      .status(201)
+      .json({ message: "Comment Added", comment: FindUpdatedPost });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send({ error: "Error in comment", message: error.message });
+  }
+};
+
+const CommentDelete = async (req, res) => {
+  try {
+    const { _id } = req.user;
+
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ message: "Invalid Post ID" });
+    }
+
+    const FindComment = await CommentModel.findById(id);
+
+    if (!FindComment) {
+      return res.status(400).send({ message: "Comment Not Found" });
+    }
+
+    if (FindComment.userId.toString() !== _id.toString()) {
+      return res.status(400).send({ message: "Not Authorized" });
+    }
+
+    await CommentModel.findByIdAndDelete(id);
+
+    const FindUpdatedComment = await PostModel.findByIdAndUpdate(
+      { _id: FindComment.postId },
+      { $inc: { commentCount: -1 } },
+      { new: true }
+    ).populate("userId", ["firstName", "lastName", "profile", "bio"]);
+
+    res
+      .status(201)
+      .json({ message: "Comment Deleted", post: FindUpdatedComment });
   } catch (error) {
     console.log(error.message);
     res.status(500).send({ error: "Error in comment", message: error.message });
@@ -192,6 +264,7 @@ module.exports = {
   PostCreate,
   PostLike,
   CommentCreate,
+  CommentDelete,
   CommentLike,
   UserPost,
   PostDelete,

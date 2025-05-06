@@ -17,18 +17,14 @@ const PostModel = mongoose.Schema(
     Image: {
       type: "String",
     },
-    Like: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "user",
-      },
-    ],
-    Comment: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "comment",
-      },
-    ],
+    likeCount: {
+      type: Number,
+      default: 0,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
+    },
     isLike: {
       type: Boolean,
       default: false,
