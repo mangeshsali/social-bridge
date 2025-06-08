@@ -7,6 +7,9 @@ const {
   UpdateProfile,
   Updateinfo,
   feed,
+
+  ForgotPassword,
+  ResetPassword,
 } = require("../Controllers/UserControllers");
 const Auth = require("../Middleware/Auth");
 const upload = require("../Middleware/Upload");
@@ -24,7 +27,11 @@ const {
   CommentLike,
   UserPost,
   PostDelete,
+  PostDetails,
   CommentDelete,
+  PostsComments,
+  PostsLikes,
+  PostBYId,
 } = require("../Controllers/PostController");
 const {
   GithubCreate,
@@ -49,6 +56,8 @@ routes.get("/profile", Auth, Profile);
 routes.put("/uploadprofile", Auth, upload.single("profile"), UpdateProfile);
 routes.put("/updateinfo", Auth, Updateinfo);
 routes.get("/feed", Auth, feed);
+routes.post("/reset-password", ForgotPassword);
+routes.post("/reset-password/:token", ResetPassword);
 
 // User Project
 
@@ -60,11 +69,14 @@ routes.delete("/deleteproject/:id", Auth, ProjectDelete);
 //Post Routes
 routes.post("/post", Auth, upload.single("Image"), PostCreate);
 routes.get("/post", Auth, UserPost);
+routes.get("/comments/:id", Auth, PostsComments);
+routes.get("/likes/:id", Auth, PostsLikes);
 routes.post("/postlike/:id", Auth, PostLike);
 routes.post("/comment/:id", Auth, CommentCreate);
 routes.delete("/comment/:id", Auth, CommentDelete);
 routes.post("/commentlike/:id", Auth, CommentLike);
 routes.delete("/post/:id", Auth, PostDelete);
+routes.get("/post/:id", Auth, PostBYId);
 
 // Social Connect
 routes.post("/socialgithub", Auth, GithubCreate);

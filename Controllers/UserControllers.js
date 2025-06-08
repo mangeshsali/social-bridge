@@ -4,7 +4,12 @@ var jwt = require("jsonwebtoken");
 const ProfileCloudinary = require("../Utils/ProfileCloudinary");
 const PostModel = require("../Model/PostModel");
 const ConnectionModel = require("../Model/ConnectionModel");
-const { param } = require("../Routes/RequestRoutes");
+const LikeModel = require("../Model/LikeModel");
+const validator = require("validator");
+const MailSender = require("../Utils/MailSender");
+const crypto = require("crypto");
+const ResetPasswordModel = require("../Model/ResetPassword");
+
 require("dotenv").config();
 
 const Signup = async (req, res) => {
@@ -102,6 +107,91 @@ const LogOut = async (req, res) => {
     res.clearCookie("token").send({ message: "Logout SucessFully" });
   } catch (error) {
     return res.status(500).send({ message: error.message });
+  }
+};
+
+const ForgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).send({ message: "Email is required" });
+    }
+
+    if (!validator.isEmail(email)) {
+      return res.status(400).send({ message: "Please enter correct email" });
+    }
+
+    const FindUser = await UserModel.findOne({ email: email });
+    if (!FindUser) {
+      return res.status(400).send({ message: "User Not Found" });
+    }
+
+    const ResetToken = crypto.randomBytes(32).toString("hex");
+    const ResetPasswordLink = `http://localhost:3000/api/v1/reset-password/${ResetToken}`;
+    const ResetPasswordData = {
+      userId: FindUser._id,
+      token: ResetToken,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes from now
+      createdAt: Date.now(),
+    };
+
+    await ResetPasswordModel.findOneAndUpdate(
+      { userId: FindUser._id },
+      ResetPasswordData,
+      { upsert: true, new: true }
+    );
+
+    if (!ForgotPassword) {
+      return res.status(500).send({ message: "Reset Password Failed" });
+    }
+
+    await MailSender(
+      email,
+      "Reset Password",
+      `Click on the link to reset your password: ${ResetPasswordLink}`
+    );
+
+    res.json({ message: "Password reset email sent" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).send({ status: false, message: error.message });
+  }
+};
+
+const ResetPassword = async (req, res) => {
+  try {
+    const token = req.params;
+    const { password } = req.body;
+
+    if (!token || !password) {
+      return res
+        .status(400)
+        .send({ message: "Token and password are required" });
+    }
+
+    const ResetPasswordData = await ResetPasswordModel.findOne({
+      token: token.token,
+      expiresAt: { $gt: new Date() },
+    });
+    if (!ResetPasswordData) {
+      return res.status(400).send({ message: "Invalid or expired token" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = ResetPasswordData.userId;
+    const UpdateUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { password: hashedPassword },
+      { new: true }
+    );
+    if (!UpdateUser) {
+      return res.status(400).send({ message: "User not found" });
+    }
+    await ResetPasswordModel.deleteOne({ userId: userId });
+    res.status(200).send({ message: "Password reset successfully" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).send({ status: false, message: error.message });
   }
 };
 
@@ -248,7 +338,8 @@ const feed = async (req, res) => {
     })
       .populate("userId", ["profile", "bio", "lastName", "firstName"])
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     if (FindUser.length === 0) {
       return res
@@ -256,18 +347,23 @@ const feed = async (req, res) => {
         .status(200);
     }
 
-    const UpdateIsLinked = FindUser.map((post) => {
-      const isLiked = post.Like.includes(LogInID.toString());
-      if (isLiked) {
-        return { ...post._doc, isLike: true };
-      } else {
-        return { ...post._doc, isLike: false };
-      }
+    const currentUserLike = await Promise.all(
+      FindUser.map(async (post) => {
+        const FindUserLike = await LikeModel.exists({
+          postId: post._id,
+          userId: LogInID,
+        });
+        return {
+          ...post,
+          isLike: !!FindUserLike,
+        };
+      })
+    );
+    res.status(200).send({
+      success: true,
+      message: "Post Found",
+      posts: currentUserLike,
     });
-
-    res
-      .status(200)
-      .send({ success: true, message: "Post Found", posts: UpdateIsLinked });
   } catch (error) {
     res
       .send({
@@ -282,7 +378,9 @@ module.exports = {
   LogIn,
   Profile,
   LogOut,
+  ForgotPassword,
   UpdateProfile,
   Updateinfo,
   feed,
+  ResetPassword,
 };
